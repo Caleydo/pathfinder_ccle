@@ -1,0 +1,18 @@
+{
+  "name": "caleydo",
+  "version": "0.0.1",
+  "caleydo": {
+    "python-server-plugins": [
+      {
+        "type": "namespace",
+        "id": "pathfinder-ccle",
+        "module": "pathfinder-ccle/ccle",
+        "namespace": "/api/ccle"
+      }
+    ],
+    "python-pip": {
+      "numpy": ">=1.8.2",
+      "tables": ">=3.2.0"
+    }
+  }
+}
