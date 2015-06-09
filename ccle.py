@@ -16,12 +16,17 @@ class NumpyAwareJSONEncoder(json.JSONEncoder):
   """
 
   def default(self, obj):
-    if isinstance(obj, np.ndarray):
+    if isinstance(obj, np.ndarray) or isinstance(obj, tables.Array):
       if obj.ndim == 1:
-        return [None if np.isnan(x) else x for x in obj.tolist()]
+        return [x for x in obj]
       else:
         return [self.default(obj[i]) for i in range(obj.shape[0])]
-    return json.JSONEncoder.default(self, obj)
+    if isinstance(obj, np.generic):
+      a = np.asscalar(obj)
+      if isinstance(a, float) and np.isnan(a):
+        return None
+      return a
+    return super(NumpyAwareJSONEncoder, self).default(obj)
 
 h5 = tables.open_file('/vagrant_data/ccle.h5', 'r')
 
