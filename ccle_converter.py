@@ -7,7 +7,18 @@ import glob
 import json
 import os
 
-base = '/vagrant_data/tcga_sampled'
+base = '/vagrant_data/tcga'
+
+"""
+how to convert a caleydo project (without computation)
+start hacked version and load the project
+within org.caleydo.data the csv files will generated
+rename the heterogeneous column csv file: xxx_cols.csv to xxx_desc.csv and edit it
+1. remove header
+2. fix name
+3. add additional columns for the type: string (extra column the max length), int8, int16,int32, float16, float32, float64, enum (add as extra columns the categories)
+convert it
+"""
 
 h5 = tables.open_file(base+'.h5','w')
 
