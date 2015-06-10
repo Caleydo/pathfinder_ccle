@@ -68,10 +68,11 @@ for f in glob.glob(base+'/*_data.csv'):
 
     cols = np.loadtxt(name+'_cols.csv', dtype=np.string_, delimiter=';', skiprows=1, usecols=(1,))
     h5.create_array(group, 'cols', cols)
+    load_stratification(cols,coltype)
 
     data = np.genfromtxt(f, dtype=np.float32, delimiter=';', missing_values='NaN', filling_values=np.NaN)
     h5.create_array(group, 'data', data)
-    load_stratification(cols,coltype)
+    h5.set_node_attr(group, 'range', [np.nanmin(data), np.nanmax(data)])
 
   if os.path.exists(name+'_desc.csv'): #table case
     h5.set_node_attr(group, 'type', 'table')
@@ -87,39 +88,51 @@ for f in glob.glob(base+'/*_data.csv'):
       for row in csv.reader(cc,delimiter=';'):
         t = None
         pos = int(row[0])
+        column = dict(key=clean_name(row[1]),name=row[1])
         if row[2] == 'string':
           t = tables.StringCol(int(row[3]),pos=pos)
-          t2 = 'string'+row[3]
+          column['type'] = 'string'
           m = str
         elif row[2] == 'enum':
           keys = row[3:]
           keys.append('NA')
           print keys
           enum_ = tables.misc.enum.Enum(keys)
-          t2 = 'enum:'+':'.join(keys)
+          column['type'] = 'categorical'
+          column['categories'] = keys
           t = tables.EnumCol(enum_, 'NA', base='uint8',pos=pos)
           def wrap(e): #wrap in a function for the right scope
             return lambda x: e[x]
           m = wrap(enum_)
         else:
           t2 = row[2]
-          t = lookup[t2](pos=pos)
-          if t2[0] == 'f':
+          t = lookup[row[2]](pos=pos)
+          if t2.startswith('float'):
             m = lambda x : np.NaN if x == 'NA' or x == '' else float(x)
+            column['type'] = 'real'
           else:
             m = lambda x : -1 if x == 'NA' or x == '' else int(x)
+            column['type'] = 'int'
+          column['range'] = [None, None]
         desc[clean_name(row[1])] = t
-        columns.append(dict(key=clean_name(row[1]),name=row[1],type=t2))
+        columns.append(column)
         mapper.append(m)
-    h5.set_node_attr(group,'columns',columns)
 
     table = h5.create_table(group,'table',desc)
     with open(name+'_data.csv','r') as d:
       entry = table.row
       for row in csv.reader(d,delimiter=';'):
         for col,m,v in zip(columns,mapper,row):
-          entry[col['key']] = m(v)
+          v = m(v)
+          entry[col['key']] = v
+          if col['type'] == 'real' or col['type'] == 'int':
+            old = col['range'][0]
+            col['range'][0] = v if old is None or v < old else old
+            old = col['range'][1]
+            col['range'][1] = v if old is None or v > old else old
         entry.append()
+
+    h5.set_node_attr(group,'columns',columns)
 
   h5.flush()
 
