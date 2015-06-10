@@ -1,5 +1,5 @@
 
-from flask import Flask, request, jsonify, Response
+from flask import Flask, request, jsonify, Response, abort
 import tables
 import numpy as np
 import json
@@ -28,33 +28,47 @@ class NumpyAwareJSONEncoder(json.JSONEncoder):
       return a
     return super(NumpyAwareJSONEncoder, self).default(obj)
 
+def dump(obj):
+  d = json.dumps(obj,cls=NumpyAwareJSONEncoder)
+  return Response(response=d, mimetype="application/json")
+
 h5 = tables.open_file('/vagrant_data/ccle.h5', 'r')
 
 @app.route('/')
 def all():
   r = []
   for group in h5.walk_groups('/'):
+    if 'type' not in group._v_attrs:
+      continue
     print group
-    try:
-      if group._v_attrs.type == 'matrix':
-        r.append(dict(name=group._v_name, title=group._v_title.strip()
-                      , coltype=group._v_attrs.coltype.strip()
-                      , rowtype=group._v_attrs.rowtype.strip()))
-    except AttributeError, e:
-      print e
-  return json.dumps(r)
+    tt = group._v_attrs.type
+    base = dict(name=group._v_name, title=group._v_title.strip(),type=tt)
+    if tt == 'matrix':
+      base['coltype'] = group._v_attrs.coltype.strip()
+      base['rowtype'] = group._v_attrs.rowtype.strip()
+    elif tt == 'stratification':
+      base['idtype'] = group._v_attrs.idtype.strip()
+    r.append(base)
+
+  return dump(r)
 
 
-def filter_ids(to_include, arr):
-  return
 
 @app.route('/<dataset>')
 def get_info(dataset):
+  if '/'+dataset not in h5:
+    abort(404)
+
   group = h5.get_node('/'+dataset)
-  return jsonify(name=group._v_name, title=group._v_title.strip()
+  if group._v_attrs.type == 'matrix':
+      return jsonify(name=group._v_name, title=group._v_title.strip()
                       , coltype=group._v_attrs.coltype.strip()
                       , rowtype=group._v_attrs.rowtype.strip(),
                       dim=map(int, group.data.shape))
+  if group._v_attrs.type == 'stratification':
+    return jsonify(name=group._v_name, title=group._v_title.strip()
+                      , idtype=group._v_attrs.idtype.strip(),
+                      groups={name: dict(title=gf._v_title,size=len(gf)) for name,gf in group._v_children.iteritems()})
 
 def resolve(dataset):
   rows = request.args.getlist('rows[]')
@@ -77,12 +91,15 @@ def resolve(dataset):
 
 @app.route('/<dataset>/data')
 def get_data(dataset):
+  if '/'+dataset not in h5:
+    abort(404)
   mini,rows,cols = resolve(dataset)
-  t = json.dumps(dict(data=mini,cols=cols,rows=rows),cls=NumpyAwareJSONEncoder)
-  return Response(t, mimetype='application/json')
+  return dump(dict(data=mini,cols=cols,rows=rows))
 
 @app.route('/<dataset>/stats')
 def get_stats(dataset):
+  if '/'+dataset not in h5:
+    abort(404)
   mini,rows,cols = resolve(dataset)
   axis = request.args.get('axis',None)
   if axis == 'rows':
@@ -110,25 +127,43 @@ def get_stats(dataset):
 
 @app.route('/<dataset>/rows')
 def get_rows(dataset):
+  if '/'+dataset not in h5:
+    abort(404)
   rows = request.args.getlist('rows[]')
   if len(rows) > 0:
-    rowids = filter_ids(rows, h5.get_node('/' + dataset + '/rows'))
+    rowids = np.nonzero(np.in1d(h5.get_node('/' + dataset + '/rows'), rows))[0]
   else:
     rowids = Ellipsis
   data = h5.get_node('/' + dataset + '/rows')
-  return json.dumps(data[rowids].tolist())
+  return dump(data[rowids])
 
 
 @app.route('/<dataset>/cols')
 def get_cols(dataset):
+  if '/'+dataset not in h5:
+    abort(404)
   rows = request.args.getlist('cols[]')
   if len(rows) > 0:
-    rowids = filter_ids(rows, h5.get_node('/' + dataset + '/cols'))
+    rowids = np.nonzero(np.in1d(h5.get_node('/' + dataset + '/cols'), rows))[0]
   else:
     rowids = Ellipsis
   data = h5.get_node('/' + dataset + '/cols')
-  return json.dumps(data[rowids].tolist())
+  return dump(data[rowids])
 
+@app.route('/<dataset>/group')
+def get_groups(dataset):
+  if '/'+dataset not in h5:
+    abort(404)
+  g = h5.get_node('/'+dataset)
+  r = {name: dict(title=gf._v_title,ids=gf) for name,gf in g._v_children.iteritems()}
+  return dump(r)
+
+@app.route('/<dataset>/group/<group>')
+def get_group(dataset, group):
+  if '/'+dataset+'/'+group not in h5:
+    abort(404)
+  g = h5.get_node('/'+dataset+'/'+group)
+  return dump(g)
 
 def create(*args, **kwargs):
   return app

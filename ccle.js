@@ -37,5 +37,12 @@ define(['exports', '../caleydo/main'], function (exports, C) {
       param['cols'] = col_ids;
     }
     return C.getAPIJSON('/ccle/' + dataset + '/cols', param);
-  }
+  };
+  exports.group = function (dataset, group) {
+    if (typeof group !== 'undefined') {
+      return C.getAPIJSON('/ccle/' + dataset + '/group/'+group);
+    } else {
+      return C.getAPIJSON('/ccle/' + dataset + '/group');
+    }
+  };
 });
