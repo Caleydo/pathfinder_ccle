@@ -89,14 +89,14 @@ def resolve(dataset):
   mini = data[rowids, colids]
   return mini,rowdata,coldata
 
-@app.route('/<dataset>/data')
+@app.route('/<dataset>/data', methods=['GET','POST'])
 def get_data(dataset):
   if '/'+dataset not in h5:
     abort(404)
   mini,rows,cols = resolve(dataset)
   return dump(dict(data=mini,cols=cols,rows=rows))
 
-@app.route('/<dataset>/stats')
+@app.route('/<dataset>/stats', methods=['GET','POST'])
 def get_stats(dataset):
   if '/'+dataset not in h5:
     abort(404)
@@ -125,7 +125,7 @@ def get_stats(dataset):
     return jsonify(**r)
 
 
-@app.route('/<dataset>/rows')
+@app.route('/<dataset>/rows', methods=['GET','POST'])
 def get_rows(dataset):
   if '/'+dataset not in h5:
     abort(404)
@@ -138,7 +138,7 @@ def get_rows(dataset):
   return dump(data[rowids])
 
 
-@app.route('/<dataset>/cols')
+@app.route('/<dataset>/cols', methods=['GET','POST'])
 def get_cols(dataset):
   if '/'+dataset not in h5:
     abort(404)
