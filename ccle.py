@@ -216,7 +216,7 @@ def boxplot():
     s = set()
     for k,v in groups.iteritems():
       if k in summary or '_all' in summary:
-        s.union(v)
+        s = s.union(v)
     groups = dict(summary=np.array(list(s)))
 
   all_genes = genes is None
