@@ -7,7 +7,7 @@ import glob
 import json
 import os
 
-base = '/vagrant_data/tcga'
+base = '/vagrant_data/number_one'
 
 """
 how to convert a caleydo project (without computation)

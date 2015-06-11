@@ -3,7 +3,7 @@ from flask import Flask, request, jsonify, Response, abort
 import tables
 import numpy as np
 import json
-
+import itertools
 # create the api application
 app = Flask(__name__)
 
@@ -33,6 +33,8 @@ def dump(obj):
   return Response(response=d, mimetype="application/json")
 
 h5 = tables.open_file('/vagrant_data/ccle.h5', 'r')
+
+
 
 @app.route('/')
 def all():
@@ -157,6 +159,93 @@ def get_groups(dataset):
   g = h5.get_node('/'+dataset)
   r = {name: dict(title=gf._v_title,ids=gf) for name,gf in g._v_children.iteritems()}
   return dump(r)
+
+def boxplot_impl(d):
+  d = np.array(d)
+
+  h = np.percentile(d, [25, 75])
+  lower_iqr = h[0] - (h[1] - h[0]) * 1.5
+  upper_iqr = h[1] + (h[1] - h[0]) * 1.5
+
+  r = dict(
+    min=np.nanmin(d),
+    max=np.nanmin(d),
+    nans=d.size - np.isnan(d).sum(),
+    median=np.median(d),
+    quartile25=h[0],
+    quartile75=h[1],
+    iqrMin=np.nan,
+    iqrMax=np.nan,
+    numElements=d.size)
+  d = d.flat
+  candidates = d[np.logical_and(lower_iqr <= d, d <= h[0])]
+  if len(candidates) > 0:
+    r['iqrMin'] = candidates[0]
+  candidates = d[np.logical_and(h[1] <= d, d <= upper_iqr)]
+  if len(candidates) > 0:
+    r['iqrMax'] = candidates[-1]
+
+  return r
+
+cache = dict()
+
+def to_datasetid(dataset, k, cols, genes):
+  global cache
+  key = dataset+'_'+k
+  if key in cache:
+    return cache[key]
+  r = np.nonzero(np.in1d(cols, genes))[0]
+  cache[key] = r
+  return r
+
+@app.route('/boxplot',methods=['GET','POST'])
+def boxplot():
+  """
+  boxplot data for a specific case
+  :return:
+  """
+  strat = request.args.get('stratification','compoundcelleffect_siteprimary')
+  datasets = request.args.get('datasets[]',['copynumbervariation','mrnaexpression'])
+  summary = request.args.get('groups[]',None)
+  genes = request.args['g'].split(',') if 'g' in request.args else None
+
+  strat = h5.get_node('/'+strat)
+  groups = {name: gf for name,gf in strat._v_children.iteritems()}
+
+  if summary is not None: #create a summary
+    s = set()
+    for k,v in groups.iteritems():
+      if k in summary or '_all' in summary:
+        s.union(v)
+    groups = dict(summary=np.array(list(s)))
+
+  all_genes = genes is None
+  import collections
+  r = collections.defaultdict(dict)
+  for dataset in datasets:
+    d = h5.get_node('/'+dataset+'/data')
+    if all_genes:
+      rowdata = ['summary']
+      rowids = [Ellipsis]
+    else:
+      rowdata = h5.get_node('/' + dataset + '/rows')
+      rowids = np.nonzero(np.in1d(rowdata, genes))[0]
+      rowdata = rowdata[rowids]
+
+    coldata = h5.get_node('/' + dataset + '/cols')
+    dgroups = { k : to_datasetid(dataset, k, coldata, v) for k,v in groups.iteritems()}
+
+    for gene, row in itertools.izip(rowdata,rowids):
+      data = d[row,]
+      container = dict()
+      r[gene][dataset] = container
+      for group, groupids in dgroups.iteritems():
+        dg = data[...,groupids]
+        stats = boxplot_impl(dg)
+        container[group] = stats
+
+  return dump(r)
+
 
 @app.route('/<dataset>/group/<group>')
 def get_group(dataset, group):

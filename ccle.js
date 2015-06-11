@@ -45,4 +45,63 @@ define(['exports', '../caleydo/main'], function (exports, C) {
       return C.getAPIJSON('/ccle/' + dataset + '/group');
     }
   };
+
+
+  function boxplotImpl(genes, summaryOfGroups) {
+    genes = genes || null;
+    summaryOfGroups = summaryOfGroups || null;
+    var param = {};
+    if (genes) {
+      param['g'] = genes.join(',');
+    }
+    if (summaryOfGroups) {
+      param['groups'] = summaryOfGroups
+    }
+    return C.getAPIJSON('/ccle/boxplot', param);
+  }
+
+  var cache = {};
+
+  function resolveImpl(key, summaryOfGroups) {
+    var t = cache[key];
+    var promise = boxplotImpl(t.to_be_queried.map(function(d) { return d.gene; }), summaryOfGroups);
+    var sent = t.to_be_queried;
+    sent.forEach(function(g) {
+      t.cache[g.gene] = promise;
+    });
+    promise.then(function(output) {
+      sent.forEach(function(g) {
+        g.callback(output[g.gene]);
+      });
+    });
+    t.to_be_queried = [];
+  }
+  exports.boxplot_of = function(gene, callback, summaryOfGroups) {
+    var key = summaryOfGroups ? summaryOfGroups.join('_') : '_individual';
+    var t;
+    if (key in cache) {
+      t = cache[key]
+    } else {
+      t = { to_be_queried : [], cache : {}, wait_timer : -1};
+      cache[key] = t
+    }
+    if (gene in t.cache) {
+      t.cache[gene].then(function(output) {
+        callback(output[gene]);
+      });
+    } else {
+      t.to_be_queried.push({ gene: gene, callback: callback});
+      if (t.wait_timer > 0) {
+        clearTimeout(t.wait_timer);
+        t.wait_timer = -1;
+      }
+      if (t.to_be_queried.length > 10) {
+        resolveImpl(key, summaryOfGroups)
+      } else {
+        t.wait_timer = setTimeout(function() {
+          resolveImpl(key, summaryOfGroups)
+        }, 200); //wait and collect 200 milliseconds
+      }
+    }
+  };
 });
