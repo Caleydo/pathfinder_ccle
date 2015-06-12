@@ -250,7 +250,10 @@ def boxplot():
       for group, groupids in dgroups.iteritems():
         dg = data[...,groupids]
         stats = boxplot_impl(dg)
-        container[group] = stats
+        res = dict()
+        res["stats"] = stats
+        res["data"] = dg
+        container[group] = res
 
   return dump(r)
 
