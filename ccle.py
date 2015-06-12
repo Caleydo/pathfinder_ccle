@@ -169,9 +169,11 @@ def boxplot_impl(d):
 
   r = dict(
     min=np.nanmin(d),
-    max=np.nanmin(d),
-    nans=d.size - np.isnan(d).sum(),
+    max=np.nanmax(d),
+    nans=np.isnan(d).sum(),
     median=np.median(d),
+    mean=np.nanmean(d),
+    std=np.nanstd(d),
     quartile25=h[0],
     quartile75=h[1],
     iqrMin=np.nan,
@@ -248,7 +250,10 @@ def boxplot():
       for group, groupids in dgroups.iteritems():
         dg = data[...,groupids]
         stats = boxplot_impl(dg)
-        container[group] = stats
+        res = dict()
+        res["stats"] = stats
+        res["data"] = dg
+        container[group] = res
 
   return dump(r)
 
