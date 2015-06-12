@@ -205,8 +205,12 @@ def boxplot():
   :return:
   """
   strat = request.args.get('stratification','compoundcelleffect_siteprimary')
-  datasets = request.args.get('datasets[]',['copynumbervariation','mrnaexpression'])
-  summary = request.args.get('groups[]',None)
+  datasets = request.args.getlist('datasets[]')
+  if len(datasets) == 0:
+    datasets = ['copynumbervariation','mrnaexpression']
+  summary = request.args.getlist('groups[]')
+  if len(summary) == 0:
+    summary = None
   genes = request.args['g'].split(',') if 'g' in request.args else None
 
   strat = h5.get_node('/'+strat)
@@ -217,7 +221,9 @@ def boxplot():
     for k,v in groups.iteritems():
       if k in summary or '_all' in summary:
         s = s.union(v)
-    groups = dict(summary=np.array(list(s)))
+    groups = dict()
+    groups['_'.join(summary)] = np.array(list(s))
+
 
   all_genes = genes is None
   import collections
