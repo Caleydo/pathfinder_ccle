@@ -172,6 +172,8 @@ def boxplot_impl(d):
     max=np.nanmax(d),
     nans=np.isnan(d).sum(),
     median=np.median(d),
+    mean=np.nanmean(d),
+    std=np.nanstd(d),
     quartile25=h[0],
     quartile75=h[1],
     iqrMin=np.nan,
