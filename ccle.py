@@ -32,6 +32,7 @@ def dump(obj):
   d = json.dumps(obj,cls=NumpyAwareJSONEncoder)
   return Response(response=d, mimetype="application/json")
 
+
 h5 = tables.open_file('/vagrant_data/ccle.h5', 'r')
 
 
@@ -248,12 +249,10 @@ def boxplot():
       container = dict()
       r[gene][dataset] = container
       for group, groupids in dgroups.iteritems():
+        #print data.shape, groupids, group
         dg = data[...,groupids]
         stats = boxplot_impl(dg)
-        res = dict()
-        res["stats"] = stats
-        res["data"] = dg
-        container[group] = res
+        container[group] =  dict(stats=stats,data=data)
 
   return dump(r)
 

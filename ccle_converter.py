@@ -71,7 +71,7 @@ for f in glob.glob(base+'/*_data.csv'):
     load_stratification(cols,coltype)
 
     data = np.genfromtxt(f, dtype=np.float32, delimiter=';', missing_values='NaN', filling_values=np.NaN)
-    data = data[...,0:-2]
+    data = data[...,0:data.shape[1]-1]
     h5.create_array(group, 'data', data)
     h5.set_node_attr(group, 'range', [np.nanmin(data), np.nanmax(data)])
 
