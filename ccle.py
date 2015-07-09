@@ -33,8 +33,8 @@ def dump(obj):
   return Response(response=d, mimetype="application/json")
 
 
-import caleydo.config
-h5 = tables.open_file(caleydo.config.get('file','pathfinder-ccle'), 'r')
+import caleydo_server.config
+h5 = tables.open_file(caleydo_server.config.get('file','pathfinder-ccle'), 'r')
 
 @app.route('/')
 def all():
