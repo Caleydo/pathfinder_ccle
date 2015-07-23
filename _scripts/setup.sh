@@ -14,8 +14,8 @@ then
   echo "ccle.h5 already there"
 else
   echo "downloading ccle.h5 file"
-  #TODO wrong link
-  wget -O ccle.h5.gz "https://googledrive.com/host/0B7lah7E3BqlAfmNnQ3ptNUhtbG1fWklkemVGc0xnZkNyZ21lUi15aFlIb3NSZ2FWOTR3NHM/ccle.h5.gz"
+  baseurl="https://googledrive.com/host/0B7lah7E3BqlAfmNnQ3ptNUhtbG1fWklkemVGc0xnZkNyZ21lUi15aFlIb3NSZ2FWOTR3NHM/"
+  wget -O ccle.h5.gz "${baseurl}/ccle.h5.gz"
   gunzip ccle.h5.gz
-  rm ccle.h5.gz
+  rm -f ccle.h5.gz
 fi
