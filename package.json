@@ -14,8 +14,7 @@
       "python": [
         {
           "type": "namespace",
-          "id": "pathfinder-ccle",
-          "module": "pathfinder-ccle/ccle",
+          "file": "ccle",
           "namespace": "/api/ccle"
         }
       ]
