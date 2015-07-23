@@ -15,7 +15,7 @@ then
 else
   echo "downloading ccle.h5 file"
   #TODO wrong link
-  wget -O ccle.h5.gz https://drive.google.com/uc?export=download&id=0B7lah7E3BqlAZ1ZsOVhtZ3M2TXc
+  wget -O ccle.h5.gz "https://googledrive.com/host/0B7lah7E3BqlAfmNnQ3ptNUhtbG1fWklkemVGc0xnZkNyZ21lUi15aFlIb3NSZ2FWOTR3NHM/ccle.h5.gz"
   gunzip ccle.h5.gz
   rm ccle.h5.gz
 fi
