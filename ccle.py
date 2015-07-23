@@ -34,7 +34,9 @@ def dump(obj):
 
 
 import caleydo_server.config
-h5 = tables.open_file(caleydo_server.config.get('file','pathfinder-ccle'), 'r')
+filename=caleydo_server.config.get('file','pathfinder_ccle')
+print filename
+h5 = tables.open_file(filename, 'r')
 
 @app.route('/')
 def all():
