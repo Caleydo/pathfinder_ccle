@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 #search for the right parent directory
-while [ ! -f "Vagrantfile" ]
+while [[ ! -f "run.sh" ]] && [[ ! -f "Vagrantfile" ]]
 do
   cd ..
 done
