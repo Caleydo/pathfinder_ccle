@@ -2,7 +2,7 @@
  * Created by Samuel Gratzl on 08.06.2015.
  */
 
-define(['exports', '../caleydo_web/main'], function (exports, C) {
+define(['exports', '../caleydo_core/main'], function (exports, C) {
   exports.list = function () {
     return C.getAPIJSON('/ccle');
   };
