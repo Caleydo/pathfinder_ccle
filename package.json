@@ -1,6 +1,8 @@
 {
   "name": "pathfinder_ccle",
   "version": "0.0.1",
+  "license" : "SEE LICENSE IN LICENSE",
+  "repository": "Caleydo/pathfinder_ccle",
   "dependencies": {
   },
   "peerDependencies": {
