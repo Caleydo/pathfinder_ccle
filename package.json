@@ -25,6 +25,9 @@
       "python": {
         "numpy": ">=1.8.2",
         "tables": ">=3.2.0"
+      },
+      "debian": {
+        "libhdf5-serial-dev": ""
       }
     }
   },
