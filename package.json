@@ -18,6 +18,11 @@
           "type": "namespace",
           "file": "ccle",
           "namespace": "/api/ccle"
+        },
+        {
+          "type": "json-encoder",
+          "id": "dataset-hdf",
+          "file": "json_encoder"
         }
       ]
     },

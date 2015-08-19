@@ -1,37 +1,13 @@
 
-from flask import Flask, request, jsonify, Response, abort
+from flask import Flask, request, Response, abort
 import tables
 import numpy as np
 import json
 import itertools
+from caleydo_server.util import jsonify
+
 # create the api application
 app = Flask(__name__)
-
-
-class NumpyAwareJSONEncoder(json.JSONEncoder):
-  """
-  helper class for converting a numpy array to json,
-
-  see http://stackoverflow.com/questions/3488934/simplejson-and-numpy-array
-  """
-
-  def default(self, obj):
-    if isinstance(obj, np.ndarray) or isinstance(obj, tables.Array):
-      if obj.ndim == 1:
-        return [x for x in obj]
-      else:
-        return [self.default(obj[i]) for i in range(obj.shape[0])]
-    if isinstance(obj, np.generic):
-      a = np.asscalar(obj)
-      if isinstance(a, float) and np.isnan(a):
-        return None
-      return a
-    return super(NumpyAwareJSONEncoder, self).default(obj)
-
-def dump(obj):
-  d = json.dumps(obj,cls=NumpyAwareJSONEncoder)
-  return Response(response=d, mimetype="application/json")
-
 
 import caleydo_server.config
 filename=caleydo_server.config.get('file','pathfinder_ccle')
@@ -54,9 +30,7 @@ def all():
       base['idtype'] = group._v_attrs.idtype.strip()
     r.append(base)
 
-  return dump(r)
-
-
+  return jsonify(r)
 
 @app.route('/<dataset>')
 def get_info(dataset):
@@ -98,7 +72,7 @@ def get_data(dataset):
   if '/'+dataset not in h5:
     abort(404)
   mini,rows,cols = resolve(dataset)
-  return dump(dict(data=mini,cols=cols,rows=rows))
+  return jsonify(dict(data=mini,cols=cols,rows=rows))
 
 @app.route('/<dataset>/stats', methods=['GET','POST'])
 def get_stats(dataset):
@@ -116,16 +90,16 @@ def get_stats(dataset):
   amean = np.nanmean(mini, axis=axis)
   astd = np.nanstd(mini, axis=axis)
   if axis is None:
-    return jsonify(min=float(amin),max=float(amax),median=float(amedian),mean=float(amean),std=float(astd))
+    return jsonify(dict(min=float(amin),max=float(amax),median=float(amedian),mean=float(amean),std=float(astd)))
   elif axis == 1:
     r = dict()
     for i,row in enumerate(rows):
-      r[row] = dict(min=float(amin[i]),max=float(amax[i]),median=float(amedian[i]),mean=float(amean[i]),std=float(astd[i]))
+      r[row] = dict(dict(min=float(amin[i]),max=float(amax[i]),median=float(amedian[i]),mean=float(amean[i]),std=float(astd[i])))
     return jsonify(**r)
   elif axis == 0:
     r = dict()
     for i,row in enumerate(cols):
-      r[row] = dict(min=float(amin[i]),max=float(amax[i]),median=float(amedian[i]),mean=float(amean[i]),std=float(astd[i]))
+      r[row] = dict(dict(min=float(amin[i]),max=float(amax[i]),median=float(amedian[i]),mean=float(amean[i]),std=float(astd[i])))
     return jsonify(**r)
 
 
@@ -139,7 +113,7 @@ def get_rows(dataset):
   else:
     rowids = Ellipsis
   data = h5.get_node('/' + dataset + '/rows')
-  return dump(data[rowids])
+  return jsonify(data[rowids])
 
 
 @app.route('/<dataset>/cols', methods=['GET','POST'])
@@ -152,7 +126,7 @@ def get_cols(dataset):
   else:
     rowids = Ellipsis
   data = h5.get_node('/' + dataset + '/cols')
-  return dump(data[rowids])
+  return jsonify(data[rowids])
 
 @app.route('/<dataset>/group')
 def get_groups(dataset):
@@ -160,7 +134,7 @@ def get_groups(dataset):
     abort(404)
   g = h5.get_node('/'+dataset)
   r = {name: dict(title=gf._v_title,ids=gf) for name,gf in g._v_children.iteritems()}
-  return dump(r)
+  return jsonify(r)
 
 def boxplot_impl(d):
   d = np.array(d)
@@ -255,7 +229,7 @@ def boxplot():
         stats = boxplot_impl(dg)
         container[group] =  dict(stats=stats,data=data)
 
-  return dump(r)
+  return jsonify(r)
 
 
 @app.route('/<dataset>/group/<group>')
@@ -263,11 +237,10 @@ def get_group(dataset, group):
   if '/'+dataset+'/'+group not in h5:
     abort(404)
   g = h5.get_node('/'+dataset+'/'+group)
-  return dump(g)
+  return jsonify(g)
 
-def create(*args, **kwargs):
+def create():
   return app
-
 
 if __name__ == '__main__':
   app.debug = True
