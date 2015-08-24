@@ -227,7 +227,7 @@ def boxplot():
         #print data.shape, groupids, group
         dg = data[...,groupids]
         stats = boxplot_impl(dg)
-        container[group] =  dict(stats=stats,data=data)
+        container[group] =  dict(stats=stats,data=dg)
 
   return jsonify(r)
 
