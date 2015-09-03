@@ -15,7 +15,7 @@ function update_file {
   echo "downloading ccle.h5 file"
   baseurl="https://googledrive.com/host/0B7lah7E3BqlAfmNnQ3ptNUhtbG1fWklkemVGc0xnZkNyZ21lUi15aFlIb3NSZ2FWOTR3NHM/"
   wget --timestamping -O ccle.h5.gz "${baseurl}/ccle.h5.gz"
-  gunzip ccle.h5.gz
+  gunzip -f ccle.h5.gz
   rm -f ccle.h5.gz
 }
 
@@ -29,7 +29,8 @@ function setup {
 }
 
 function update {
-  update_file
+  #update_file
+  echo "nothing to update"
 }
 
 function uninstall {
