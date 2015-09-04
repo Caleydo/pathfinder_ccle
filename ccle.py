@@ -46,7 +46,7 @@ def all():
       continue
     print group
     tt = group._v_attrs.type
-    base = dict(name=group._v_name, title=group._v_title.strip(),type=tt)
+    base = dict(id=group._v_name, name=group._v_title.strip(),type=tt)
     if tt == 'matrix':
       base['coltype'] = group._v_attrs.coltype.strip()
       base['rowtype'] = group._v_attrs.rowtype.strip()
