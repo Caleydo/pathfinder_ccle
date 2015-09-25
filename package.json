@@ -35,7 +35,7 @@
         "libhdf5-serial-dev": ""
       },
       "redhat": {
-        "libhdf5-devel": ""
+        "hdf5-devel": ""
       }
     }
   },
