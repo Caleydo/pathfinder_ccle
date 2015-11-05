@@ -250,7 +250,7 @@ def boxplot():
     summary = None
   genes = request.args['g'].split(',') if 'g' in request.args else None
 
-  key = mc_prefix+'boxplot@'+to_json(strat=strat,datsets=datasets,summary=summary,genes=genes)
+  key = mc_prefix+'boxplot@'+to_json(dict(strat=strat,datsets=datasets,summary=summary,genes=genes)).replace(' ','_')
 
   obj = mc.get(key)
   if obj:
