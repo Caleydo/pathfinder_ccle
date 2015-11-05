@@ -29,10 +29,12 @@
     "dependencies": {
       "python": {
         "numpy": ">=1.8.2",
-        "tables": "==3.2.1.1"
+        "tables": "==3.2.1.1",
+        "memcached": "==1.57"
       },
       "debian": {
-        "libhdf5-serial-dev": ""
+        "libhdf5-serial-dev": "",
+        "memcached": ""
       },
       "redhat": {
         "hdf5-devel": ""

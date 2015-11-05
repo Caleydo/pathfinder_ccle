@@ -2,9 +2,8 @@
 from flask import Flask, request, Response, abort
 import tables
 import numpy as np
-import json
 import itertools
-from caleydo_server.util import jsonify
+from caleydo_server.util import to_json, jsonify
 
 # create the api application
 app = Flask(__name__)
@@ -14,8 +13,22 @@ filename=caleydo_server.config.get('file','pathfinder_ccle')
 print filename
 h5 = tables.open_file(filename, 'r')
 
+import memcache
+mc = memcache.Client(['127.0.0.1:11211'], debug=0)
+
+mc_prefix='ccle_'
+
+
 @app.route('/')
 def all():
+  key = mc_prefix+'_info'
+  obj = mc.get(key)
+  if not obj:
+    obj = all_impl()
+    mc.set(key, obj)
+  return Response(obj, mimetype='application/json')
+
+def all_impl():
   r = []
   for group in h5.walk_groups('/'):
     if 'type' not in group._v_attrs:
@@ -30,21 +43,30 @@ def all():
       base['idtype'] = group._v_attrs.idtype.strip()
     r.append(base)
 
-  return jsonify(r)
+  return to_json(r)
+
 
 @app.route('/<dataset>')
 def get_info(dataset):
+  key = mc_prefix+dataset+'_info'
+  obj = mc.get(key)
+  if not obj:
+    obj = get_info_impl(dataset)
+    mc.set(key, obj)
+  return Response(obj, mimetype='application/json')
+
+def get_info_impl(dataset):
   if '/'+dataset not in h5:
     abort(404)
 
   group = h5.get_node('/'+dataset)
   if group._v_attrs.type == 'matrix':
-      return jsonify(name=group._v_name, title=group._v_title.strip()
+      return to_json(name=group._v_name, title=group._v_title.strip()
                       , coltype=group._v_attrs.coltype.strip()
                       , rowtype=group._v_attrs.rowtype.strip(),
                       dim=map(int, group.data.shape))
   if group._v_attrs.type == 'stratification':
-    return jsonify(name=group._v_name, title=group._v_title.strip()
+    return to_json(name=group._v_name, title=group._v_title.strip()
                       , idtype=group._v_attrs.idtype.strip(),
                       groups={name: dict(title=gf._v_title,size=len(gf)) for name,gf in group._v_children.iteritems()})
 
@@ -69,17 +91,31 @@ def resolve(dataset):
 
 @app.route('/<dataset>/data', methods=['GET','POST'])
 def get_data(dataset):
+  key = mc_prefix+dataset+'_data'
+  obj = mc.get(key)
+  if not obj:
+    obj = get_data_impl(dataset)
+    mc.set(key, obj)
+  return Response(obj, mimetype='application/json')
+
+def get_data_impl(dataset):
   if '/'+dataset not in h5:
     abort(404)
   mini,rows,cols = resolve(dataset)
-  return jsonify(dict(data=mini,cols=cols,rows=rows))
+  return to_json(dict(data=mini,cols=cols,rows=rows))
 
 @app.route('/<dataset>/stats', methods=['GET','POST'])
 def get_stats(dataset):
-  if '/'+dataset not in h5:
-    abort(404)
-  mini,rows,cols = resolve(dataset)
   axis = request.args.get('axis',None)
+  key = mc_prefix+dataset+'_stats'+(axis if axis is not None else '')
+  obj = mc.get(key)
+  if not obj:
+    obj = get_stats_impl(dataset, axis)
+    mc.set(key, obj)
+  return Response(obj, mimetype='application/json')
+
+def get_stats_impl(dataset, axis):
+  mini,rows,cols = resolve(dataset)
   if axis == 'rows':
     axis = 1
   elif axis == 'cols':
@@ -90,51 +126,74 @@ def get_stats(dataset):
   amean = np.nanmean(mini, axis=axis)
   astd = np.nanstd(mini, axis=axis)
   if axis is None:
-    return jsonify(dict(min=float(amin),max=float(amax),median=float(amedian),mean=float(amean),std=float(astd)))
+    return to_json(dict(min=float(amin),max=float(amax),median=float(amedian),mean=float(amean),std=float(astd)))
   elif axis == 1:
     r = dict()
     for i,row in enumerate(rows):
       r[row] = dict(dict(min=float(amin[i]),max=float(amax[i]),median=float(amedian[i]),mean=float(amean[i]),std=float(astd[i])))
-    return jsonify(**r)
+    return to_json(**r)
   elif axis == 0:
     r = dict()
     for i,row in enumerate(cols):
       r[row] = dict(dict(min=float(amin[i]),max=float(amax[i]),median=float(amedian[i]),mean=float(amean[i]),std=float(astd[i])))
-    return jsonify(**r)
+    return to_json(**r)
 
 
 @app.route('/<dataset>/rows', methods=['GET','POST'])
 def get_rows(dataset):
+  rows = request.args.getlist('rows[]')
+  key = mc_prefix+dataset+'_rows_'+','.join(rows)
+  obj = mc.get(key)
+  if not obj:
+    obj = get_rows_impl(dataset, rows)
+    mc.set(key, obj)
+  return Response(obj, mimetype='application/json')
+
+def get_rows_impl(dataset, rows):
   if '/'+dataset not in h5:
     abort(404)
-  rows = request.args.getlist('rows[]')
   if len(rows) > 0:
     rowids = np.nonzero(np.in1d(h5.get_node('/' + dataset + '/rows'), rows))[0]
   else:
     rowids = Ellipsis
   data = h5.get_node('/' + dataset + '/rows')
-  return jsonify(data[rowids])
-
+  return to_json(data[rowids])
 
 @app.route('/<dataset>/cols', methods=['GET','POST'])
 def get_cols(dataset):
+  rows = request.args.getlist('cols[]')
+  key = mc_prefix+dataset+'_cols_'+','.join(rows)
+  obj = mc.get(key)
+  if not obj:
+    obj = get_cols_impl(dataset, rows)
+    mc.set(key, obj)
+  return Response(obj, mimetype='application/json')
+
+def get_cols_impl(dataset, rows):
   if '/'+dataset not in h5:
     abort(404)
-  rows = request.args.getlist('cols[]')
   if len(rows) > 0:
     rowids = np.nonzero(np.in1d(h5.get_node('/' + dataset + '/cols'), rows))[0]
   else:
     rowids = Ellipsis
   data = h5.get_node('/' + dataset + '/cols')
-  return jsonify(data[rowids])
+  return to_json(data[rowids])
 
 @app.route('/<dataset>/group')
 def get_groups(dataset):
+  key = mc_prefix+dataset+'_groups'
+  obj = mc.get(key)
+  if not obj:
+    obj = get_groups_impl(dataset)
+    mc.set(key, obj)
+  return Response(obj, mimetype='application/json')
+
+def get_groups_impl(dataset):
   if '/'+dataset not in h5:
     abort(404)
   g = h5.get_node('/'+dataset)
   r = {name: dict(title=gf._v_title,ids=gf) for name,gf in g._v_children.iteritems()}
-  return jsonify(r)
+  return to_json(r)
 
 def boxplot_impl(d):
   d = np.array(d)
@@ -191,6 +250,12 @@ def boxplot():
     summary = None
   genes = request.args['g'].split(',') if 'g' in request.args else None
 
+  key = mc_prefix+'boxplot@'+to_json(strat=strat,datsets=datasets,summary=summary,genes=genes)
+
+  obj = mc.get(key)
+  if obj:
+    return Response(obj, mimetype='application/json')
+
   strat = h5.get_node('/'+strat)
   groups = {name: gf for name,gf in strat._v_children.iteritems()}
 
@@ -229,7 +294,9 @@ def boxplot():
         stats = boxplot_impl(dg)
         container[group] =  dict(stats=stats,data=dg)
 
-  return jsonify(r)
+  obj = to_json(r)
+  mc.set(key, obj)
+  return Response(obj, mimetype='application/json')
 
 
 @app.route('/<dataset>/group/<group>')
