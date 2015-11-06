@@ -30,7 +30,7 @@
       "python": {
         "numpy": ">=1.8.2",
         "tables": "==3.2.1.1",
-        "memcached": "==1.57"
+        "python-memcached": "==1.57"
       },
       "debian": {
         "libhdf5-serial-dev": "",
