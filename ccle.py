@@ -318,7 +318,11 @@ def boxplot_api2(gene, strat='compoundcelleffect_siteprimary', datasets=['copynu
   for dataset in datasets:
     d = h5.get_node('/'+dataset+'/data')
     rowdata = h5.get_node('/' + dataset + '/rows')
-    row = np.nonzero(np.in1d(rowdata, [gene]))[0][0]
+    row = np.nonzero(np.in1d(rowdata, [gene]))[0]
+
+    if len(row) == 0:
+      return dict()
+    row = row[0]
 
     coldata = h5.get_node('/' + dataset + '/cols')
     dgroups = { k : to_datasetid(dataset, k, coldata, v) for k,v in groups.iteritems()}
