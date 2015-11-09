@@ -250,11 +250,15 @@ def boxplot():
     summary = None
   genes = request.args['g'].split(',') if 'g' in request.args else None
 
+  obj = boxplot_api(genes, summary, strat, datasets)
+  return Response(obj, mimetype='application/json')
+
+def boxplot_api(genes, summary=None, strat='compoundcelleffect_siteprimary', datasets=['copynumbervariation','mrnaexpression']):
   key = mc_prefix+'boxplot@'+to_json(dict(strat=strat,datsets=datasets,summary=summary,genes=genes)).replace(' ','_')
 
   obj = mc.get(key)
   if obj:
-    return Response(obj, mimetype='application/json')
+    return obj
 
   strat = h5.get_node('/'+strat)
   groups = {name: gf for name,gf in strat._v_children.iteritems()}
@@ -296,7 +300,39 @@ def boxplot():
 
   obj = to_json(r)
   mc.set(key, obj)
-  return Response(obj, mimetype='application/json')
+  return obj
+
+
+def boxplot_api2(gene, strat='compoundcelleffect_siteprimary', datasets=['copynumbervariation','mrnaexpression']):
+  strat = h5.get_node('/'+strat)
+  groups = {name: gf for name,gf in strat._v_children.iteritems()}
+
+  s = set()
+  for k,v in groups.iteritems():
+    s = s.union(v)
+  groups['_all'] = np.array(list(s))
+
+
+  import collections
+  r = collections.defaultdict(dict)
+  for dataset in datasets:
+    d = h5.get_node('/'+dataset+'/data')
+    rowdata = h5.get_node('/' + dataset + '/rows')
+    row = np.nonzero(np.in1d(rowdata, [gene]))[0][0]
+
+    coldata = h5.get_node('/' + dataset + '/cols')
+    dgroups = { k : to_datasetid(dataset, k, coldata, v) for k,v in groups.iteritems()}
+
+    data = d[row,]
+    container = dict()
+    r[dataset] = container
+    for group, groupids in dgroups.iteritems():
+      #print data.shape, groupids, group
+      dg = data[...,groupids]
+      stats = boxplot_impl(dg)
+      container[group] =  dict(stats=stats,data=dg)
+
+  return r
 
 
 @app.route('/<dataset>/group/<group>')
