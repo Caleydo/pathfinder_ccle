@@ -2,9 +2,9 @@
  * Created by Samuel Gratzl on 08.06.2015.
  */
 
-define(['exports', '../caleydo/main'], function (exports, C) {
+define(['exports', '../caleydo_core/ajax'], function (exports, ajax) {
   exports.list = function () {
-    return C.getAPIJSON('/ccle');
+    return ajax.getAPIJSON('/ccle');
   };
   exports.data = function (dataset, row_ids, col_ids, method) {
     row_ids = row_ids || [];
@@ -17,7 +17,7 @@ define(['exports', '../caleydo/main'], function (exports, C) {
     if (col_ids.length > 0) {
       param['cols'] = col_ids;
     }
-    return C.getAPIJSON('/ccle/' + dataset + '/'+method, param);
+    return ajax.getAPIJSON('/ccle/' + dataset + '/'+method, param);
   };
   exports.stats = function(dataset, row_ids, col_ids) {
     return exports.data(dataset, row_ids, col_ids, 'stats');
@@ -28,7 +28,7 @@ define(['exports', '../caleydo/main'], function (exports, C) {
     if (row_ids.length > 0) {
       param['rows'] = row_ids;
     }
-    return C.getAPIJSON('/ccle/' + dataset + '/rows', param);
+    return ajax.getAPIJSON('/ccle/' + dataset + '/rows', param);
   };
   exports.cols = function (dataset, col_ids) {
     col_ids = col_ids || [];
@@ -36,13 +36,13 @@ define(['exports', '../caleydo/main'], function (exports, C) {
     if (row_ids.length > 0) {
       param['cols'] = col_ids;
     }
-    return C.getAPIJSON('/ccle/' + dataset + '/cols', param);
+    return ajax.getAPIJSON('/ccle/' + dataset + '/cols', param);
   };
   exports.group = function (dataset, group) {
     if (typeof group !== 'undefined') {
-      return C.getAPIJSON('/ccle/' + dataset + '/group/'+group);
+      return ajax.getAPIJSON('/ccle/' + dataset + '/group/'+group);
     } else {
-      return C.getAPIJSON('/ccle/' + dataset + '/group');
+      return ajax.getAPIJSON('/ccle/' + dataset + '/group');
     }
   };
 
@@ -57,7 +57,7 @@ define(['exports', '../caleydo/main'], function (exports, C) {
     if (summaryOfGroups) {
       param['groups'] = summaryOfGroups
     }
-    return C.getAPIJSON('/ccle/boxplot', param);
+    return ajax.getAPIJSON('/ccle/boxplot', param);
   }
 
   var cache = {};
