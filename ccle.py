@@ -211,8 +211,8 @@ def boxplot_impl(d):
     std=np.nanstd(d),
     quartile25=h[0],
     quartile75=h[1],
-    iqrMin=np.nan,
-    iqrMax=np.nan,
+    iqrMin=None,
+    iqrMax=None,
     numElements=d.size)
   d = d.flat
   candidates = d[np.logical_and(lower_iqr <= d, d <= h[0])]
