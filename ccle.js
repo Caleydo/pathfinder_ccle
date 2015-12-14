@@ -33,7 +33,7 @@ define(['exports', '../caleydo_core/ajax'], function (exports, ajax) {
   exports.cols = function (dataset, col_ids) {
     col_ids = col_ids || [];
     var param = {};
-    if (row_ids.length > 0) {
+    if (col_ids.length > 0) {
       param['cols'] = col_ids;
     }
     return ajax.getAPIJSON('/ccle/' + dataset + '/cols', param);
