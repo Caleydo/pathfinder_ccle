@@ -39,6 +39,9 @@
       "redhat": {
         "hdf5-devel": ""
       }
+    },
+    "scripts": {
+      "pre_start": "sudo service memcached start"
     }
   },
   "publishConfig": {
