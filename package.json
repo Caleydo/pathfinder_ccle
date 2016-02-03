@@ -41,7 +41,8 @@
       }
     },
     "scripts": {
-      "pre_start": "sudo service memcached start"
+      "pre_start": "sudo service memcached start",
+      "pre_start_redhat": "sudo service memcached start"
     }
   },
   "publishConfig": {
