@@ -5,12 +5,16 @@ import numpy as np
 import itertools
 from caleydo_server.util import to_json, jsonify
 
+
+import logging
+_log = logging.getLogger('pathfinder_ccle.' + __name__)
+
 # create the api application
 app = Flask(__name__)
 
 import caleydo_server.config
 filename=caleydo_server.config.get('file','pathfinder_ccle')
-print filename
+_log.debug('loading file: %s', filename)
 h5 = tables.open_file(filename, 'r')
 
 import memcache
@@ -33,7 +37,7 @@ def all_impl():
   for group in h5.walk_groups('/'):
     if 'type' not in group._v_attrs:
       continue
-    print group
+    _log.debug('loading group %s',group)
     tt = group._v_attrs.type
     base = dict(id=group._v_name, name=group._v_title.strip(),type=tt)
     if tt == 'matrix':
