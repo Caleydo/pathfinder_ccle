@@ -7,7 +7,7 @@ from caleydo_server.util import to_json, jsonify
 
 
 import logging
-_log = logging.getLogger('pathfinder_ccle.' + __name__)
+_log = logging.getLogger(__name__)
 
 # create the api application
 app = Flask(__name__)
