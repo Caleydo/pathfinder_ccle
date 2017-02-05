@@ -1,3 +1,4 @@
 {
+  "memcached": "memcached",
   "file": "${phovea_server.dataDir}/ccle.h5"
 }

@@ -1,7 +1,8 @@
+import tables
+
+
 __author__ = 'Samuel Gratzl'
 
-import numpy as np
-import tables
 
 class NumpyTablesEncoder(object):
   def __contains__(self, obj):
@@ -18,6 +19,7 @@ class NumpyTablesEncoder(object):
     return None
 
 n = NumpyTablesEncoder()
+
 
 def create():
   return n
