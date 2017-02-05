@@ -2,7 +2,7 @@
  * Created by Samuel Gratzl on 08.06.2015.
  */
 
-define(['exports', '../caleydo_core/ajax'], function (exports, ajax) {
+define(['exports', 'phovea_core/src/ajax'], function (exports, ajax) {
   exports.list = function () {
     return ajax.getAPIJSON('/ccle');
   };

@@ -1,19 +1,19 @@
 
-from flask import Flask, request, Response, abort
+from phovea_server.ns import Namespace, request, Response, abort
 import tables
 import numpy as np
 import itertools
-from caleydo_server.util import to_json, jsonify
+from phovea_server.util import to_json, jsonify
 
 
 import logging
 _log = logging.getLogger(__name__)
 
 # create the api application
-app = Flask(__name__)
+app = Namespace(__name__)
 
-import caleydo_server.config
-filename=caleydo_server.config.get('file','pathfinder_ccle')
+import phovea_server.config
+filename=phovea_server.config.get('file','pathfinder_ccle')
 _log.debug('loading file: %s', filename)
 h5 = tables.open_file(filename, 'r')
 
