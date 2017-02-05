@@ -1,0 +1,45 @@
+{
+  "generator-phovea": {
+    "type": "lib-slib",
+    "name": "pathfinder_ccle",
+    "author": "The Caleydo Team",
+    "githubAccount": "phovea",
+    "modules": [
+      "phovea_server"
+    ],
+    "extensions": [],
+    "sextensions": [
+      {
+        "type": "namespace",
+        "id": "pathfinder_ccle",
+        "module": "ccle",
+        "extras": {
+          "namespace": "/api/ccle"
+        }
+      },
+      {
+        "type": "json-encoder",
+        "id": "dataset-hdf",
+        "module": "json_encoder",
+        "extras": {}
+      }
+    ],
+    "libraries": [],
+    "unknown": {
+      "requirements": [
+        "numpy>=1.8.2",
+        "tables==3.2.1.1",
+        "python-memcached==1.57"
+      ],
+      "dockerPackages": [
+        "libhdf5-serial-dev",
+        "memcached"
+      ]
+    },
+    "libraryAliases": {},
+    "libraryExternals": [],
+    "entries": "./index.js",
+    "ignores": [],
+    "today": "Sun, 05 Feb 2017 09:19:19 GMT"
+  }
+}
