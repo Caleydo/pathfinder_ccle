@@ -11,7 +11,7 @@ def phovea(registry):
   :param registry:
   """
   # generator-phovea:begin
-  registry.append('namespace', 'pathfinder_ccle', 'pathfinder_ccle.pathway', dict(namespace='/api/ccle'))
+  registry.append('namespace', 'pathfinder_ccle', 'pathfinder_ccle.ccle', dict(namespace='/api/ccle'))
   # generator-phovea:end
   pass
 
