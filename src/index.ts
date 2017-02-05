@@ -3,8 +3,6 @@
  */
 
 import {getAPIJSON} from 'phovea_core/src/ajax';
-import Timer = NodeJS.Timer;
-
 
 export function list() {
   return getAPIJSON('/ccle');
