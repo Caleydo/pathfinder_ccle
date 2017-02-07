@@ -10,6 +10,6 @@ import {register} from 'phovea_core/src/plugin';
  * build a registry by registering all phovea modules
  */
 //other modules
-
+import 'phovea_core/phovea_registry.js';
 //self
 register('pathfinder_ccle',require('./phovea.js'));
