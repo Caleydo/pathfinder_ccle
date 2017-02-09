@@ -29,11 +29,10 @@
     "unknown": {
       "requirements": [
         "tables==3.3.0",
-        "python-memcached==1.55"
+        "python-memcached==1.58"
       ],
       "dockerPackages": [
-        "libhdf5-serial-dev",
-        "memcached"
+        "libhdf5-serial-dev"
       ]
     },
     "libraryAliases": {},
