@@ -71,7 +71,7 @@
     "node": ">= 6"
   },
   "dependencies": {
-    "phovea_core": "github:phovea/phovea_core#develop"
+    "phovea_core": "2.0.0"
   },
   "devDependencies": {
     "@types/jasmine": "2.5.41",
